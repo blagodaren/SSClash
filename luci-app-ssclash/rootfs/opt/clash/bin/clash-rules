@@ -784,8 +784,13 @@ extract_proxy_rule_set_names() {
             next
         }
 
-        # Compound OR rule: - OR,((RULE-SET,n1,...),(RULE-SET,n2,...)),ACTION
-        if (line ~ /^-[[:space:]]*OR,\(/) {
+        # Compound OR/AND rule:
+        #   - OR,((RULE-SET,n1,...),(RULE-SET,n2,...)),ACTION
+        #   - AND,((RULE-SET,n1),(NETWORK,tcp),(DST-PORT,80)),ACTION
+        # Both share the "KEYWORD,((...)),ACTION" shape; the RULE-SET extraction
+        # loop below only matches "RULE-SET," tokens, so non-RULE-SET conditions
+        # (NETWORK, DST-PORT, …) inside an AND are ignored automatically.
+        if (line ~ /^-[[:space:]]*(OR|AND),\(/) {
             # Extract action: everything after the last ")),"
             temp = line
             if (sub(/.*\)\),/, "", temp)) {
